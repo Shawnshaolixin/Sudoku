@@ -19,9 +19,8 @@ namespace Sudoku.Gameplay
     /// </summary>
     public sealed class SudokuGameController : MonoBehaviour
     {
-        [Header("对局配置")]
-        [SerializeField] private Difficulty _difficulty = Difficulty.Easy;
-        [SerializeField] private bool _showMistakes = true; // 错误检测开关
+        private Difficulty _difficulty = Difficulty.Easy;
+        private bool _showMistakes = true; // 错误检测开关(运行时从 SettingsService 读取)
 
         private SudokuBoard _puzzle;    // 给定数(不可改)
         private SudokuBoard _solution;  // 完整解
@@ -64,7 +63,8 @@ namespace Sudoku.Gameplay
         private void Awake()
         {
             _statistics = StatisticsStore.Load();
-            NewGame(_difficulty);
+            _showMistakes = SettingsService.ShowMistakes;
+            NewGame(SceneNavigator.SelectedDifficulty);
         }
 
         // ---------- 开局 ----------

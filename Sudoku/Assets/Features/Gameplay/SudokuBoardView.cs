@@ -166,6 +166,7 @@ namespace Sudoku.Gameplay
             AddHorizontalLayout(bar, 8f);
             AddButton(bar, "撤销", () => _controller.Undo());
             AddButton(bar, "提示", () => _controller.TryUseHint());
+            AddButton(bar, "菜单", () => SceneNavigator.LoadMenu());
         }
 
         private void BuildDifficultyBar(Transform parent)

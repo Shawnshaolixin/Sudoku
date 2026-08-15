@@ -7,18 +7,17 @@ using UnityEngine.UI;
 namespace Sudoku.Gameplay.Editor
 {
     /// <summary>
-    /// 一键生成对局场景。菜单:Sudoku → Create Gameplay Scene。
-    /// 生成 Assets/App/Scenes/Gameplay.unity,并注册到 Build Settings。
-    /// 场景含:控制器、棋盘视图、新手引导。
+    /// 一键生成主菜单场景。菜单:Sudoku → Create Main Menu Scene。
+    /// 生成 Assets/App/Scenes/Menu.unity,并注册到 Build Settings。
     /// </summary>
-    public static class GameplaySceneBuilder
+    public static class MenuSceneBuilder
     {
-        [MenuItem("Sudoku/Create Gameplay Scene")]
+        [MenuItem("Sudoku/Create Main Menu Scene")]
         public static void Create()
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
 
-            // 1) Canvas(UGUI 根;显式带上 RectTransform,避免 Canvas 缺失矩形变换)
+            // Canvas
             var canvasGo = new GameObject("Canvas", typeof(RectTransform));
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -29,7 +28,7 @@ namespace Sudoku.Gameplay.Editor
             scaler.matchWidthOrHeight = 0.5f;
             canvasGo.AddComponent<GraphicRaycaster>();
 
-            // 2) EventSystem(UGUI 输入事件必需)
+            // EventSystem
             if (Object.FindFirstObjectByType<EventSystem>() == null)
             {
                 var esGo = new GameObject("EventSystem");
@@ -37,29 +36,26 @@ namespace Sudoku.Gameplay.Editor
                 esGo.AddComponent<StandaloneInputModule>();
             }
 
-            // 3) 对局控制器(纯逻辑,不挂 UI)
-            new GameObject("SudokuGameController").AddComponent<SudokuGameController>();
+            // 主菜单
+            var menuGo = new GameObject("MainMenuView", typeof(RectTransform));
+            menuGo.transform.SetParent(canvasGo.transform, false);
+            menuGo.AddComponent<MainMenuView>();
 
-            // 4) 棋盘视图(运行时自建 UI,并在 Awake 里自寻控制器)
-            var viewGo = new GameObject("SudokuBoardView", typeof(RectTransform));
-            viewGo.transform.SetParent(canvasGo.transform, false);
-            viewGo.AddComponent<SudokuBoardView>();
+            // 设置面板(主菜单通过 FindFirstObjectByType 找到并 Show/Hide)
+            var settingsGo = new GameObject("SettingsPanelView", typeof(RectTransform));
+            settingsGo.transform.SetParent(canvasGo.transform, false);
+            settingsGo.AddComponent<SettingsPanelView>();
 
-            // 5) 新手引导(放在视图之后,层级更高,弹窗能盖住棋盘)
-            var onboardingGo = new GameObject("OnboardingView", typeof(RectTransform));
-            onboardingGo.transform.SetParent(canvasGo.transform, false);
-            onboardingGo.AddComponent<OnboardingView>();
-
-            // 6) 保存 + 注册
+            // 保存 + 注册
             const string dir = "Assets/App/Scenes";
             ProjectSceneTools.EnsureFolder(dir);
-            const string path = dir + "/Gameplay.unity";
+            const string path = dir + "/Menu.unity";
             EditorSceneManager.SaveScene(scene, path);
             ProjectSceneTools.EnsureInBuildSettings(path);
             AssetDatabase.Refresh();
 
-            Debug.Log($"对局场景已生成:{path}");
-            EditorUtility.DisplayDialog("Sudoku", "对局场景已保存到 Assets/App/Scenes/Gameplay.unity。", "好的");
+            Debug.Log($"主菜单场景已生成:{path}");
+            EditorUtility.DisplayDialog("Sudoku", "主菜单场景已保存到 Assets/App/Scenes/Menu.unity。\n请再执行 Sudoku → Create Gameplay Scene 生成对局场景。", "好的");
         }
     }
 }
