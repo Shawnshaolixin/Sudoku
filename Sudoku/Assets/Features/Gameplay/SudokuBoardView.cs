@@ -90,8 +90,10 @@ namespace Sudoku.Gameplay
             var rootLayout = gameObject.AddComponent<VerticalLayoutGroup>();
             rootLayout.spacing = 12;
             rootLayout.childAlignment = TextAnchor.UpperCenter;
+            // childControl* = true:布局组接管子元素尺寸(尊重 LayoutElement/Text 的 preferred 尺寸);
+            // childForceExpandWidth = true:子元素水平方向铺满,便于居中。
             rootLayout.childControlWidth = true;
-            rootLayout.childControlHeight = false;
+            rootLayout.childControlHeight = true;
             rootLayout.childForceExpandWidth = true;
             rootLayout.childForceExpandHeight = false;
             rootLayout.padding = new RectOffset(16, 16, 24, 16);
@@ -147,7 +149,7 @@ namespace Sudoku.Gameplay
         private void BuildNumberPad(Transform parent)
         {
             var pad = CreateRect("NumberPad", parent);
-            var layout = AddHorizontalLayout(pad, 6f);
+            AddHorizontalLayout(pad, 6f);
 
             for (int d = 1; d <= 9; d++)
             {
@@ -180,8 +182,10 @@ namespace Sudoku.Gameplay
             var layout = rt.gameObject.AddComponent<HorizontalLayoutGroup>();
             layout.spacing = spacing;
             layout.childAlignment = TextAnchor.MiddleCenter;
-            layout.childControlWidth = false;
-            layout.childControlHeight = false;
+            // childControl* = true 才会应用按钮上 LayoutElement 的 preferred 尺寸(64x64),
+            // 否则按钮会退回默认 100x100 导致横向溢出/错位。
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = false;
             return layout;
@@ -218,12 +222,29 @@ namespace Sudoku.Gameplay
         {
             var rt = CreateRect(name, parent);
             var text = rt.gameObject.AddComponent<Text>();
+            // 关键:AddComponent<Text>() 不会自动绑定字体,必须显式赋值,否则文字不可见。
+            text.font = GetDefaultFont();
             text.fontSize = fontSize;
             text.alignment = anchor;
             text.color = color;
             text.horizontalOverflow = HorizontalWrapMode.Overflow;
             text.verticalOverflow = VerticalWrapMode.Overflow;
+            text.raycastTarget = false; // 文本不拦截点击,让按钮/格子的 Image 接收事件
             return text;
+        }
+
+        private static Font _defaultFont;
+
+        /// <summary>获取内置字体(Unity 2022.3 为 LegacyRuntime.ttf),并缓存复用。</summary>
+        private static Font GetDefaultFont()
+        {
+            if (_defaultFont == null)
+            {
+                _defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                if (_defaultFont == null)
+                    _defaultFont = Resources.GetBuiltinResource<Font>("Arial.ttf"); // 兼容旧版本
+            }
+            return _defaultFont;
         }
 
         private static void Stretch(RectTransform rt)

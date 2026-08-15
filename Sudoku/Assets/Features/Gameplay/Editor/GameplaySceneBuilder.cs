@@ -18,8 +18,8 @@ namespace Sudoku.Gameplay.Editor
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
 
-            // 1) Canvas(UGUI 根)
-            var canvasGo = new GameObject("Canvas");
+            // 1) Canvas(UGUI 根;显式带上 RectTransform,避免 Canvas 缺失矩形变换)
+            var canvasGo = new GameObject("Canvas", typeof(RectTransform));
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             var scaler = canvasGo.AddComponent<CanvasScaler>();
