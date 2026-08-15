@@ -50,6 +50,22 @@ namespace Sudoku.Gameplay
                 _controller = FindFirstObjectByType<SudokuGameController>();
             if (_controller != null)
                 Bind(_controller);
+            EnsureOnboarding();
+        }
+
+        /// <summary>
+        /// 保证新手引导一定生效:若尚未完成且场景里没有预置 OnboardingView(例如未重建场景),
+        /// 就动态补一个,避免引导因场景缺少组件而失效。
+        /// </summary>
+        private void EnsureOnboarding()
+        {
+            if (SettingsService.OnboardingCompleted) return;
+            if (FindFirstObjectByType<OnboardingView>() != null) return;
+
+            var canvas = GetComponentInParent<Canvas>();
+            var go = new GameObject("OnboardingView", typeof(RectTransform));
+            go.transform.SetParent(canvas != null ? canvas.transform : transform, false);
+            go.AddComponent<OnboardingView>();
         }
 
         /// <summary>绑定控制器并构建 UI(幂等,重复调用会被忽略)。</summary>
