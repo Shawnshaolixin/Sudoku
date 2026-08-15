@@ -6,21 +6,7 @@ namespace Sudoku.Gameplay
     /// <summary>首次启动新手引导(模态):仅在未完成时显示,分步讲解、可跳过,引导期间暂停计时。</summary>
     public sealed class OnboardingView : MonoBehaviour
     {
-        private static readonly string[] Steps =
-        {
-            "数独规则:在 9×9 棋盘里,让每一行、每一列、每个 3×3 宫都包含 1~9,且不重复。",
-            "点击任意空格选中它,再用下方数字键盘填入数字。",
-            "点数字键盘的「✎」可切换笔记模式,记录候选数。",
-            "选中一个数字时,同行/列/宫和相同数字会高亮,帮你排除。",
-            "卡住时点「提示」,会帮你填入一个正确的数字。准备好了就点「开始」!"
-        };
-
-        [Header("配色")]
-        [SerializeField] private Color _panelColor = new Color(0.98f, 0.98f, 1f, 1f);
-        [SerializeField] private Color _textColor = new Color(0.12f, 0.12f, 0.18f, 1f);
-        [SerializeField] private Color _primaryColor = new Color(0.35f, 0.55f, 0.95f, 1f);
-        [SerializeField] private Color _secondaryColor = new Color(0.90f, 0.92f, 1f, 1f);
-
+        private string[] _steps;
         private GameObject _overlay;
         private Text _stepText;
         private Text _nextLabel;
@@ -29,6 +15,15 @@ namespace Sudoku.Gameplay
         private void Awake()
         {
             if (SettingsService.OnboardingCompleted) return; // 已看过,不显示
+
+            _steps = new[]
+            {
+                Localization.T("onboarding.step1"),
+                Localization.T("onboarding.step2"),
+                Localization.T("onboarding.step3"),
+                Localization.T("onboarding.step4"),
+                Localization.T("onboarding.step5"),
+            };
 
             UiFactory.Stretch((RectTransform)transform);
             BuildOverlay();
@@ -46,8 +41,7 @@ namespace Sudoku.Gameplay
             var overlayRt = UiFactory.CreateRect("Overlay", transform);
             _overlay = overlayRt.gameObject;
             UiFactory.Stretch(overlayRt);
-            var dim = _overlay.AddComponent<Image>();
-            dim.color = new Color(0f, 0f, 0f, 0.7f);
+            _overlay.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.7f);
 
             var panel = UiFactory.CreateRect("Panel", _overlay.transform);
             var panelRt = panel;
@@ -55,15 +49,15 @@ namespace Sudoku.Gameplay
             panelRt.anchorMax = new Vector2(0.5f, 0.5f);
             panelRt.sizeDelta = new Vector2(720, 560);
             panelRt.anchoredPosition = Vector2.zero;
-            panel.gameObject.AddComponent<Image>().color = _panelColor;
+            panel.gameObject.AddComponent<Image>().color = Theme.Panel;
 
             var layout = UiFactory.Vertical(panel, 20f, TextAnchor.UpperCenter);
             layout.padding = new RectOffset(32, 32, 32, 32);
 
-            var title = UiFactory.CreateText("Title", panel, 34, TextAnchor.MiddleCenter, _textColor);
-            title.text = "怎么玩";
+            var title = UiFactory.CreateText("Title", panel, 34, TextAnchor.MiddleCenter, Theme.Text);
+            title.text = Localization.T("onboarding.title");
 
-            _stepText = UiFactory.CreateText("StepText", panel, 26, TextAnchor.UpperLeft, _textColor);
+            _stepText = UiFactory.CreateText("StepText", panel, 26, TextAnchor.UpperLeft, Theme.Text);
             _stepText.horizontalOverflow = HorizontalWrapMode.Wrap; // 多行文本需要换行
             var stepLe = _stepText.gameObject.AddComponent<LayoutElement>();
             stepLe.preferredWidth = 640;
@@ -71,22 +65,22 @@ namespace Sudoku.Gameplay
 
             var row = UiFactory.CreateRect("Buttons", panel);
             UiFactory.Horizontal(row, 16f);
-            UiFactory.CreateButton("Skip", row, "跳过", _secondaryColor, Finish, 160, 64);
-            var next = UiFactory.CreateButton("Next", row, "下一步", _primaryColor, NextStep, 200, 64);
+            UiFactory.CreateButton("Skip", row, Localization.T("onboarding.skip"), Theme.Secondary, Finish, 160, 64);
+            var next = UiFactory.CreateButton("Next", row, Localization.T("onboarding.next"), Theme.Primary, NextStep, 200, 64);
             _nextLabel = next.GetComponentInChildren<Text>();
         }
 
         private void ShowStep(int index)
         {
             _stepIndex = index;
-            if (_stepText != null) _stepText.text = Steps[index];
+            if (_stepText != null) _stepText.text = _steps[index];
             if (_nextLabel != null)
-                _nextLabel.text = index == Steps.Length - 1 ? "开始" : "下一步";
+                _nextLabel.text = index == _steps.Length - 1 ? Localization.T("onboarding.start") : Localization.T("onboarding.next");
         }
 
         private void NextStep()
         {
-            if (_stepIndex < Steps.Length - 1) ShowStep(_stepIndex + 1);
+            if (_stepIndex < _steps.Length - 1) ShowStep(_stepIndex + 1);
             else Finish();
         }
 

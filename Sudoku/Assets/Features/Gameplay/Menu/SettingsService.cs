@@ -10,6 +10,7 @@ namespace Sudoku.Gameplay
     {
         private const string KeySound = "sudoku.settings.sound";
         private const string KeyVibration = "sudoku.settings.vibration";
+        private const string KeyMusic = "sudoku.settings.music";
         private const string KeyMistakes = "sudoku.settings.showMistakes";
         private const string KeyOnboarding = "sudoku.settings.onboardingDone";
 
@@ -23,6 +24,12 @@ namespace Sudoku.Gameplay
         {
             get => PlayerPrefs.GetInt(KeyVibration, 1) == 1;
             set => SetInt(KeyVibration, value);
+        }
+
+        public static bool Music
+        {
+            get => PlayerPrefs.GetInt(KeyMusic, 1) == 1;
+            set => SetInt(KeyMusic, value);
         }
 
         public static bool ShowMistakes

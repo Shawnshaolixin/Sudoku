@@ -63,7 +63,8 @@ namespace Sudoku.Gameplay
             image.color = color;
             var button = rt.gameObject.AddComponent<Button>();
             button.targetGraphic = image;
-            button.onClick.AddListener(() => onClick());
+            // 所有按钮统一播放点击音效,再执行具体逻辑
+            button.onClick.AddListener(() => { AudioService.PlaySfx("click"); onClick(); });
 
             var text = CreateText("Label", rt, 26, TextAnchor.MiddleCenter, new Color(0.1f, 0.1f, 0.15f, 1f));
             Stretch(text.rectTransform);

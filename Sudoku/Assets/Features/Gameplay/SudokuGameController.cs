@@ -87,6 +87,7 @@ namespace Sudoku.Gameplay
 
             _statistics.OnGameStarted();
             StatisticsStore.Save(_statistics);
+            Services.Analytics.LogEvent("level_start", "difficulty", _difficulty.ToString());
             BoardChanged?.Invoke();
         }
 
@@ -119,6 +120,7 @@ namespace Sudoku.Gameplay
                 _notes[_selectedIndex] = 0;
                 if (newValue != 0) AutoClearPeerNotes(_selectedIndex, newValue);
                 _undoStack.Push(new Move(_selectedIndex, oldValue, newValue, oldNotes, 0));
+                AudioService.PlaySfx(newValue != 0 ? "place" : "erase");
             }
 
             BoardChanged?.Invoke();
@@ -139,6 +141,7 @@ namespace Sudoku.Gameplay
             _board[_selectedIndex] = 0;
             _notes[_selectedIndex] = 0;
             _undoStack.Push(new Move(_selectedIndex, oldValue, 0, oldNotes, 0));
+            AudioService.PlaySfx("erase");
             BoardChanged?.Invoke();
         }
 
@@ -153,11 +156,49 @@ namespace Sudoku.Gameplay
             CellSelected?.Invoke(m.Index);
         }
 
-        /// <summary>使用一次提示;成功返回 true。提示用尽后触发 HintExhausted。</summary>
-        public bool TryUseHint()
+        /// <summary>
+        /// 点击「提示」按钮:有提示币直接给;用尽则看激励视频换一次提示;
+        /// 已去广告的用户直接给提示,不再看广告。
+        /// </summary>
+        public void TryUseHint()
         {
-            if (_finished) return false;
-            if (!HintEngine.GetHint(_board, out var hint)) return false;
+            if (_finished) return;
+
+            if (_hintCount > 0)
+            {
+                ApplyHint();
+                return;
+            }
+
+            // 去广告用户:直接给提示
+            if (Services.Ads.IsAdsRemoved)
+            {
+                _hintCount = 1;
+                ApplyHint();
+                return;
+            }
+
+            // 提示用尽 → 看激励视频换一次提示
+            Services.Analytics.LogEvent("hint_rewarded_show");
+            Services.Ads.ShowRewardedAd(rewarded =>
+            {
+                if (rewarded)
+                {
+                    Services.Analytics.LogEvent("hint_rewarded_granted");
+                    _hintCount = 1;
+                    ApplyHint();
+                }
+                else
+                {
+                    HintExhausted?.Invoke(); // 没看完,提示失败(UI 可提示)
+                }
+            });
+        }
+
+        /// <summary>真正执行「提示」:填入一个正确数字并消耗一次提示。</summary>
+        private void ApplyHint()
+        {
+            if (!HintEngine.GetHint(_board, out var hint)) return;
 
             int index = SudokuBoard.Index(hint.Row, hint.Col);
             int oldValue = _board[index];
@@ -169,12 +210,12 @@ namespace Sudoku.Gameplay
             _selectedIndex = index;
 
             if (_hintCount > 0) _hintCount--;
-            else HintExhausted?.Invoke();
 
+            AudioService.PlaySfx("hint");
+            Services.Analytics.LogEvent("hint_used");
             BoardChanged?.Invoke();
             CellSelected?.Invoke(index);
             CheckFinish();
-            return true;
         }
 
         /// <summary>增加提示次数(供激励视频回调用)。</summary>
@@ -238,6 +279,9 @@ namespace Sudoku.Gameplay
                 _elapsedOnFinish = Time.time - _startTime;
                 _statistics.OnGameCompleted(_difficulty, (int)_elapsedOnFinish);
                 StatisticsStore.Save(_statistics);
+                Services.Analytics.LogEvent("level_complete", "time_sec", (long)_elapsedOnFinish);
+                AudioService.PlaySfx("win");
+                if (SettingsService.Vibration) Handheld.Vibrate();
                 GameFinished?.Invoke(true);
             }
         }
