@@ -1,0 +1,13 @@
+# Unity 生成目录(匹配任意层级,故也能覆盖 Sudoku/ 子工程)
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+
+# 独立校验(_verify)的构建产物
+_verify/bin/
