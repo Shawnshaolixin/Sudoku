@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@string/gcm_defaultSenderId,@string/google_storage_bucket,@string/project_id,@string/google_api_key,@string/google_crash_reporting_api_key,@string/google_app_id">
+  <string name="gcm_defaultSenderId" translatable="false">17758843341</string>
+  <string name="google_storage_bucket" translatable="false">sudoku-18b4b.firebasestorage.app</string>
+  <string name="project_id" translatable="false">sudoku-18b4b</string>
+  <string name="google_api_key" translatable="false">AIzaSyCfoOHnl-muCe5Xt1jol6_yXIZSz1WvZuo</string>
+  <string name="google_crash_reporting_api_key" translatable="false">AIzaSyCfoOHnl-muCe5Xt1jol6_yXIZSz1WvZuo</string>
+  <string name="google_app_id" translatable="false">1:17758843341:android:894c86bc677a375ece1484</string>
+</resources>

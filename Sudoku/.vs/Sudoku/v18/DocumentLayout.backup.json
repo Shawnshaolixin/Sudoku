@@ -3,24 +3,28 @@
   "WorkspaceRootPath": "D:\\Projects\\AI\\Sudoku\\Sudoku\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{689E7DB5-0BC4-CC7B-2BE6-4929C9987618}|Sudoku.Gameplay.csproj|d:\\projects\\ai\\sudoku\\sudoku\\assets\\features\\gameplay\\services\\admobadsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{689E7DB5-0BC4-CC7B-2BE6-4929C9987618}|Sudoku.Gameplay.csproj|d:\\projects\\ai\\sudoku\\sudoku\\assets\\features\\gameplay\\services\\firebaseanalyticsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{689E7DB5-0BC4-CC7B-2BE6-4929C9987618}|Sudoku.Gameplay.csproj|solutionrelative:assets\\features\\gameplay\\services\\firebaseanalyticsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{689E7DB5-0BC4-CC7B-2BE6-4929C9987618}|Sudoku.Gameplay.csproj|D:\\Projects\\AI\\Sudoku\\Sudoku\\assets\\features\\gameplay\\services\\admobadsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{689E7DB5-0BC4-CC7B-2BE6-4929C9987618}|Sudoku.Gameplay.csproj|solutionrelative:assets\\features\\gameplay\\services\\admobadsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Projects\\AI\\Sudoku\\Sudoku\\Assets\\Features\\Gameplay\\Services\\StubServices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Features\\Gameplay\\Services\\StubServices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{689E7DB5-0BC4-CC7B-2BE6-4929C9987618}|Sudoku.Gameplay.csproj|d:\\projects\\ai\\sudoku\\sudoku\\assets\\features\\gameplay\\sudokugamecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{689E7DB5-0BC4-CC7B-2BE6-4929C9987618}|Sudoku.Gameplay.csproj|D:\\Projects\\AI\\Sudoku\\Sudoku\\assets\\features\\gameplay\\sudokugamecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{689E7DB5-0BC4-CC7B-2BE6-4929C9987618}|Sudoku.Gameplay.csproj|solutionrelative:assets\\features\\gameplay\\sudokugamecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{689E7DB5-0BC4-CC7B-2BE6-4929C9987618}|Sudoku.Gameplay.csproj|d:\\projects\\ai\\sudoku\\sudoku\\assets\\features\\gameplay\\services\\services.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{689E7DB5-0BC4-CC7B-2BE6-4929C9987618}|Sudoku.Gameplay.csproj|D:\\Projects\\AI\\Sudoku\\Sudoku\\assets\\features\\gameplay\\services\\services.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{689E7DB5-0BC4-CC7B-2BE6-4929C9987618}|Sudoku.Gameplay.csproj|solutionrelative:assets\\features\\gameplay\\services\\services.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{689E7DB5-0BC4-CC7B-2BE6-4929C9987618}|Sudoku.Gameplay.csproj|D:\\Projects\\AI\\Sudoku\\Sudoku\\assets\\features\\gameplay\\menu\\onboardingview.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{689E7DB5-0BC4-CC7B-2BE6-4929C9987618}|Sudoku.Gameplay.csproj|solutionrelative:assets\\features\\gameplay\\menu\\onboardingview.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{689E7DB5-0BC4-CC7B-2BE6-4929C9987618}|Sudoku.Gameplay.csproj|D:\\Projects\\AI\\Sudoku\\Sudoku\\Assets\\Features\\Gameplay\\Services\\StubServices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{689E7DB5-0BC4-CC7B-2BE6-4929C9987618}|Sudoku.Gameplay.csproj|solutionrelative:Assets\\Features\\Gameplay\\Services\\StubServices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -30,7 +34,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Bookmark",
@@ -39,6 +43,19 @@
             {
               "$type": "Bookmark",
               "Name": "ST:131:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "FirebaseAnalyticsService.cs",
+              "DocumentMoniker": "D:\\Projects\\AI\\Sudoku\\Sudoku\\Assets\\Features\\Gameplay\\Services\\FirebaseAnalyticsService.cs",
+              "RelativeDocumentMoniker": "Assets\\Features\\Gameplay\\Services\\FirebaseAnalyticsService.cs",
+              "ToolTip": "D:\\Projects\\AI\\Sudoku\\Sudoku\\Assets\\Features\\Gameplay\\Services\\FirebaseAnalyticsService.cs",
+              "RelativeToolTip": "Assets\\Features\\Gameplay\\Services\\FirebaseAnalyticsService.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAAA0AAAA4AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-16T14:56:55.256Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -63,12 +80,11 @@
               "RelativeToolTip": "Assets\\Features\\Gameplay\\SudokuGameController.cs",
               "ViewState": "AgIAAKIAAAAAAAAAAIBAwLUAAAA+AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-16T13:36:29.061Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-16T13:36:29.061Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "AdMobAdsService.cs",
               "DocumentMoniker": "D:\\Projects\\AI\\Sudoku\\Sudoku\\Assets\\Features\\Gameplay\\Services\\AdMobAdsService.cs",
               "RelativeDocumentMoniker": "Assets\\Features\\Gameplay\\Services\\AdMobAdsService.cs",
@@ -81,7 +97,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 5,
               "Title": "StubServices.cs",
               "DocumentMoniker": "D:\\Projects\\AI\\Sudoku\\Sudoku\\Assets\\Features\\Gameplay\\Services\\StubServices.cs",
               "RelativeDocumentMoniker": "Assets\\Features\\Gameplay\\Services\\StubServices.cs",
@@ -89,7 +105,7 @@
               "RelativeToolTip": "Assets\\Features\\Gameplay\\Services\\StubServices.cs",
               "ViewState": "AgIAAE4AAAAAAAAAAAAqwFgAAAA5AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-16T12:34:48.666Z",
+              "WhenOpened": "2026-08-16T14:03:34.585Z",
               "EditorCaption": ""
             },
             {

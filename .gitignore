@@ -14,3 +14,7 @@ _verify/bin/
 
 # Visual Studio 用户设置(含文件索引等)
 .vs/
+
+# Firebase C++ SDK 大体积二进制(可重新导入 SDK 获得,避免超出 GitHub 100MB 限制)
+Sudoku/Assets/Firebase/Plugins/x86_64/FirebaseCppApp-13_15_0.bundle
+Sudoku/Assets/Firebase/Plugins/x86_64/FirebaseCppApp-13_15_0.so
