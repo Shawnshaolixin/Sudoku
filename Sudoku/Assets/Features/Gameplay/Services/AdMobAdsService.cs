@@ -1,5 +1,8 @@
 // 本文件只有在定义了编译符号 SUDOKU_ADMOB 后才会参与编译。
-// 前提:先安装 Google Mobile Ads Unity 插件(本文针对 v8.x,官方测试广告位可直接跑通)。
+// 针对 Google Mobile Ads Unity 插件 v8.6+ / v8.7 的新 API:
+//   - RewardedAd 无参构造,广告位 ID 传给 LoadAd;
+//   - 奖励回调直接传给 Show();
+//   - UMP 使用静态方法(ConsentInformation.Update / CanRequestAds),不再用 Instance。
 #if SUDOKU_ADMOB
 using System;
 using GoogleMobileAds.Api;
@@ -10,12 +13,7 @@ namespace Sudoku.Gameplay
 {
     /// <summary>
     /// 真实 AdMob 广告服务:激励视频 + UMP 同意管理(GDPR)。
-    ///
-    /// 完整流程:
-    ///   1) UMP 请求同意(GDPR 地区会先弹同意表单);
-    ///   2) 初始化 AdMob;
-    ///   3) 加载激励视频;
-    ///   4) 展示 → 玩家看完 → 回调发放奖励。
+    /// 流程:请求同意(UMP)→ 初始化 AdMob → 加载激励视频 → 展示并发放奖励。
     /// </summary>
     public sealed class AdMobAdsService : IAdsService
     {
@@ -60,25 +58,30 @@ namespace Sudoku.Gameplay
             }
 
             _pendingRewardCallback = onReward;
-            _rewardedAd.Show();
+            // v8.6+ 新 API:奖励回调直接传给 Show()
+            _rewardedAd.Show(reward =>
+            {
+                var cb = _pendingRewardCallback;
+                _pendingRewardCallback = null;
+                cb?.Invoke(true);
+            });
         }
 
-        // ---------- UMP 同意 ----------
+        // ---------- UMP 同意(静态 API) ----------
         private void RequestConsentThenInit()
         {
-            var consentInfo = ConsentInformation.Instance;
             var request = new ConsentRequestParameters
             {
                 TagForUnderAgeOfConsent = false, // 应用不面向儿童
             };
 
-            // Update 会向 Google 请求用户是否需要同意(GDPR 地区)
-            consentInfo.Update(request, updateError =>
+            // v8.6+ 新 API:静态方法,不再用 ConsentInformation.Instance
+            ConsentInformation.Update(request, updateError =>
             {
                 if (updateError != null)
                     Debug.LogWarning($"[UMP] 同意信息更新失败:{updateError.Message}");
 
-                if (consentInfo.CanRequestAds)
+                if (ConsentInformation.CanRequestAds())
                 {
                     // 可直接请求广告(非 GDPR 地区,或用户已同意)
                     MobileAds.Initialize(status => { IsInitialized = true; LoadRewardedAd(); });
@@ -99,31 +102,36 @@ namespace Sudoku.Gameplay
         // ---------- 激励视频 ----------
         private void LoadRewardedAd()
         {
-            // 每次重建广告对象并订阅事件(旧对象由 Destroy 释放,无需手动退订)
-            if (_rewardedAd != null) _rewardedAd.Destroy();
-
-            _rewardedAd = new RewardedAd(RewardedAdUnitId);
-
-            // 玩家看完广告 → 发放奖励
-            _rewardedAd.OnUserEarnedReward += (sender, reward) =>
+            // 清理旧广告实例
+            if (_rewardedAd != null)
             {
-                var cb = _pendingRewardCallback;
-                _pendingRewardCallback = null;
-                cb?.Invoke(true);
-            };
+                _rewardedAd.Destroy();
+                _rewardedAd = null;
+            }
 
-            // 广告关闭 → 预加载下一条,提升下次体验
-            _rewardedAd.OnAdClosed += (sender, e) => LoadRewardedAd();
-
-            // 展示失败 → 不发奖
-            _rewardedAd.OnAdFailedToShow += (sender, e) =>
+            // v8.7 API:RewardedAd 没有公开构造器,只能用静态 Load 加载,
+            // 加载成功后通过回调返回广告实例(loadError 为 null 表示成功)。
+            RewardedAd.Load(RewardedAdUnitId, new AdRequest.Builder().Build(), (ad, loadError) =>
             {
-                var cb = _pendingRewardCallback;
-                _pendingRewardCallback = null;
-                cb?.Invoke(false);
-            };
+                if (loadError != null)
+                {
+                    Debug.LogWarning($"[AdMob] 激励视频加载失败:{loadError}");
+                    return;
+                }
 
-            _rewardedAd.LoadAd(new AdRequest.Builder().Build());
+                _rewardedAd = ad;
+
+                // 广告关闭 → 预加载下一条,提升下次体验
+                _rewardedAd.OnAdFullScreenContentClosed += () => LoadRewardedAd();
+
+                // 展示失败 → 不发奖
+                _rewardedAd.OnAdFullScreenContentFailed += error =>
+                {
+                    var cb = _pendingRewardCallback;
+                    _pendingRewardCallback = null;
+                    cb?.Invoke(false);
+                };
+            });
         }
     }
 }

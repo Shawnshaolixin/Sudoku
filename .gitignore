@@ -11,3 +11,6 @@
 
 # 独立校验(_verify)的构建产物
 _verify/bin/
+
+# Visual Studio 用户设置(含文件索引等)
+.vs/
