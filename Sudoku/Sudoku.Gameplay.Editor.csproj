@@ -64,6 +64,7 @@
     <Compile Include="Assets\Features\Gameplay\Editor\SpriteImportSettings.cs" />
     <Compile Include="Assets\Features\Gameplay\Editor\GameplaySceneBuilder.cs" />
     <Compile Include="Assets\Features\Gameplay\Editor\MenuSceneBuilder.cs" />
+    <Compile Include="Assets\Features\Gameplay\Editor\BuildScript.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Features\Gameplay\Editor\Sudoku.Gameplay.Editor.asmdef" />
