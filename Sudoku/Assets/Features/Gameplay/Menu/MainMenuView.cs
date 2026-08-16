@@ -92,5 +92,14 @@ namespace Sudoku.Gameplay
                 _statsText.text = Localization.F("menu.stats", s.TotalGames, s.CompletedGames);
             }
         }
+
+        private void Update()
+        {
+            // 安卓返回键/侧滑手势 → 退出应用
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Application.Quit();
+            }
+        }
     }
 }

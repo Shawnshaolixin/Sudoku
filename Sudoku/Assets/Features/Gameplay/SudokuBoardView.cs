@@ -80,6 +80,13 @@ namespace Sudoku.Gameplay
         {
             if (_controller == null || !_controller.IsReady) return;
 
+            // 安卓返回键/侧滑手势 → 回到主菜单
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                SceneNavigator.LoadMenu();
+                return;
+            }
+
             if (_statusText != null)
                 _statusText.text = Localization.F("game.status", DifficultyName(_controller.Difficulty), FormatTime(_controller.ElapsedSeconds), _controller.HintCount);
             if (_modeText != null)
