@@ -3,18 +3,31 @@ using UnityEngine.UI;
 
 namespace Sudoku.Gameplay
 {
-    /// <summary>首次启动新手引导(模态):仅在未完成时显示,分步讲解、可跳过,引导期间暂停计时。</summary>
+    /// <summary>
+    /// 首次启动新手引导(模态):仅在未完成时显示,分步讲解、可跳过,引导期间暂停计时。
+    /// UI 层级由 Prefab 承载(UiPrefabBuilder 生成),这里只绑定逻辑与文案。
+    /// 已完成引导时直接自隐藏,由场景构建器统一放置。
+    /// </summary>
     public sealed class OnboardingView : MonoBehaviour
     {
+        [Header("Prefab 引用")]
+        [SerializeField] private GameObject _overlay;
+        [SerializeField] private Text _title;
+        [SerializeField] private Text _stepText;
+        [SerializeField] private Text _nextLabel;
+        [SerializeField] private Button _skipButton;
+        [SerializeField] private Button _nextButton;
+
         private string[] _steps;
-        private GameObject _overlay;
-        private Text _stepText;
-        private Text _nextLabel;
         private int _stepIndex;
 
         private void Awake()
         {
-            if (SettingsService.OnboardingCompleted) return; // 已看过,不显示
+            if (SettingsService.OnboardingCompleted)
+            {
+                gameObject.SetActive(false); // 已看过,不显示
+                return;
+            }
 
             _steps = new[]
             {
@@ -25,8 +38,8 @@ namespace Sudoku.Gameplay
                 Localization.T("onboarding.step5"),
             };
 
-            UiFactory.Stretch((RectTransform)transform);
-            BuildOverlay();
+            _title.text = Localization.T("onboarding.title");
+            WireUi();
             ShowStep(0);
             Time.timeScale = 0f; // 引导期间暂停计时
         }
@@ -36,38 +49,10 @@ namespace Sudoku.Gameplay
             if (Time.timeScale == 0f) Time.timeScale = 1f; // 兜底恢复,防止卡在暂停
         }
 
-        private void BuildOverlay()
+        private void WireUi()
         {
-            var overlayRt = UiFactory.CreateRect("Overlay", transform);
-            _overlay = overlayRt.gameObject;
-            UiFactory.Stretch(overlayRt);
-            _overlay.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.7f);
-
-            var panel = UiFactory.CreateRect("Panel", _overlay.transform);
-            var panelRt = panel;
-            panelRt.anchorMin = new Vector2(0.5f, 0.5f);
-            panelRt.anchorMax = new Vector2(0.5f, 0.5f);
-            panelRt.sizeDelta = new Vector2(720, 560);
-            panelRt.anchoredPosition = Vector2.zero;
-            panel.gameObject.AddComponent<Image>().color = Theme.Panel;
-
-            var layout = UiFactory.Vertical(panel, 20f, TextAnchor.UpperCenter);
-            layout.padding = new RectOffset(32, 32, 32, 32);
-
-            var title = UiFactory.CreateText("Title", panel, 34, TextAnchor.MiddleCenter, Theme.Text);
-            title.text = Localization.T("onboarding.title");
-
-            _stepText = UiFactory.CreateText("StepText", panel, 26, TextAnchor.UpperLeft, Theme.Text);
-            _stepText.horizontalOverflow = HorizontalWrapMode.Wrap; // 多行文本需要换行
-            var stepLe = _stepText.gameObject.AddComponent<LayoutElement>();
-            stepLe.preferredWidth = 640;
-            stepLe.preferredHeight = 220;
-
-            var row = UiFactory.CreateRect("Buttons", panel);
-            UiFactory.Horizontal(row, 16f);
-            UiFactory.CreateButton("Skip", row, Localization.T("onboarding.skip"), Theme.Secondary, Finish, 160, 64);
-            var next = UiFactory.CreateButton("Next", row, Localization.T("onboarding.next"), Theme.Primary, NextStep, 200, 64);
-            _nextLabel = next.GetComponentInChildren<Text>();
+            UiFactory.Wire(_skipButton, Finish);
+            UiFactory.Wire(_nextButton, NextStep);
         }
 
         private void ShowStep(int index)

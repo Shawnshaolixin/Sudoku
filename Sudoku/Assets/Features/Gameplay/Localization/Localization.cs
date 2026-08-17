@@ -79,13 +79,25 @@ namespace Sudoku.Gameplay
             { "onboarding.title", new Entry("How to play", "怎么玩") },
             { "onboarding.step1", new Entry("Fill each row, column and 3×3 box with the digits 1-9, with no repeats.", "数独规则:在 9×9 棋盘里,让每一行、每一列、每个 3×3 宫都包含 1~9,且不重复。") },
             { "onboarding.step2", new Entry("Tap an empty cell to select it, then tap a number below to fill it in.", "点击任意空格选中它,再用下方数字键盘填入数字。") },
-            { "onboarding.step3", new Entry("Tap the pencil ✎ to switch to note mode and jot down candidates.", "点数字键盘的「✎」可切换笔记模式,记录候选数。") },
+            { "onboarding.step3", new Entry("Tap the ＋ button to switch to note mode and jot down candidates.", "点数字键盘的「＋」可切换笔记模式,记录候选数。") },
             { "onboarding.step4", new Entry("Selecting a number highlights its row, column, box and identical numbers to help you eliminate.", "选中一个数字时,同行/列/宫和相同数字会高亮,帮你排除。") },
             { "onboarding.step5", new Entry("Stuck? Tap Hint to fill in a correct number. Tap Start when ready!", "卡住时点「提示」,会帮你填入一个正确的数字。准备好了就点「开始」!") },
             { "onboarding.skip", new Entry("Skip", "跳过") },
             { "onboarding.next", new Entry("Next", "下一步") },
             { "onboarding.start", new Entry("Start", "开始") },
         };
+
+        /// <summary>
+        /// 遍历全部文案(英中双语)。编辑器工具用它收集字符集,供 TMP 字体烘焙裁剪。
+        /// </summary>
+        public static IEnumerable<string> AllStrings()
+        {
+            foreach (var e in Table.Values)
+            {
+                yield return e.En;
+                yield return e.Zh;
+            }
+        }
 
         /// <summary>取文案;找不到 key 时返回 key 本身(便于发现漏配)。</summary>
         public static string T(string key)

@@ -6,8 +6,9 @@ using UnityEngine.UI;
 namespace Sudoku.Gameplay
 {
     /// <summary>
-    /// 棋盘视图:运行时用 UGUI 动态构建 9x9 盘面、数字键盘与工具栏,
-    /// 在 Awake 中自动寻找 <see cref="SudokuGameController"/> 并订阅事件刷新。
+    /// 棋盘视图:界面主体(标题、键盘、工具栏等)由 Prefab 承载,
+    /// 仅 9×9 盘面在运行时填入 <see cref="_boardGrid"/> 容器(动态内容不落 Prefab)。
+    /// Awake 自动寻找 <see cref="SudokuGameController"/> 并订阅事件刷新。
     /// </summary>
     public sealed class SudokuBoardView : MonoBehaviour
     {
@@ -17,14 +18,29 @@ namespace Sudoku.Gameplay
         [SerializeField] private float _boxSpacing = 4f;    // 3×3 宫之间的粗线宽
         [SerializeField] private int _boardBorder = 4;      // 棋盘外边框宽
 
+        [Header("Prefab 引用(由 UiPrefabBuilder 生成时绑定)")]
+        [SerializeField] private RectTransform _boardGrid;
+        [SerializeField] private Text _title;
+        [SerializeField] private Text _statusText;
+        [SerializeField] private Text _modeText;
+        [SerializeField] private Text _statsText;
+        [SerializeField] private Text _resultText;
+        [SerializeField] private Button[] _numberButtons;   // 数字键盘 1~9
+        [SerializeField] private Button _eraseButton;
+        [SerializeField] private Button _modeButton;
+        [SerializeField] private Button _undoButton;
+        [SerializeField] private Button _hintButton;
+        [SerializeField] private Button _menuButton;
+        [SerializeField] private Button _easyButton;
+        [SerializeField] private Button _mediumButton;
+        [SerializeField] private Button _hardButton;
+        [SerializeField] private Font _semiboldFont; // 棋盘数字
+        [SerializeField] private Font _regularFont;  // 笔记
+
         private SudokuGameController _controller;
         private bool _built;
 
         private Cell[] _cells;
-        private Text _statusText;
-        private Text _modeText;
-        private Text _statsText;
-        private Text _resultText;
 
         private struct Cell
         {
@@ -39,32 +55,17 @@ namespace Sudoku.Gameplay
                 _controller = FindFirstObjectByType<SudokuGameController>();
             if (_controller != null)
                 Bind(_controller);
-            EnsureOnboarding();
+            WireUi();
         }
 
-        /// <summary>
-        /// 保证新手引导一定生效:若尚未完成且场景里没有预置 OnboardingView(例如未重建场景),
-        /// 就动态补一个,避免引导因场景缺少组件而失效。
-        /// </summary>
-        private void EnsureOnboarding()
-        {
-            if (SettingsService.OnboardingCompleted) return;
-            if (FindFirstObjectByType<OnboardingView>() != null) return;
-
-            var canvas = GetComponentInParent<Canvas>();
-            var go = new GameObject("OnboardingView", typeof(RectTransform));
-            go.transform.SetParent(canvas != null ? canvas.transform : transform, false);
-            go.AddComponent<OnboardingView>();
-        }
-
-        /// <summary>绑定控制器并构建 UI(幂等,重复调用会被忽略)。</summary>
+        /// <summary>绑定控制器并构建棋盘 UI(幂等,重复调用会被忽略)。</summary>
         public void Bind(SudokuGameController controller)
         {
             if (_built || controller == null) return;
             _controller = controller;
             controller.BoardChanged += Refresh;
             controller.GameFinished += OnGameFinished;
-            BuildUi();
+            BuildGrid();
             _built = true;
             Refresh();
         }
@@ -74,6 +75,26 @@ namespace Sudoku.Gameplay
             if (_controller == null) return;
             _controller.BoardChanged -= Refresh;
             _controller.GameFinished -= OnGameFinished;
+        }
+
+        /// <summary>绑定 Prefab 按钮的点击逻辑与文案。</summary>
+        private void WireUi()
+        {
+            if (_title != null) _title.text = Localization.T("menu.title");
+
+            for (int i = 0; i < _numberButtons.Length; i++)
+            {
+                int n = i + 1;
+                UiFactory.Wire(_numberButtons[i], () => _controller.InputNumber(n));
+            }
+            UiFactory.Wire(_eraseButton, () => _controller.Erase());
+            UiFactory.Wire(_modeButton, () => _controller.ToggleInputMode());
+            UiFactory.Wire(_undoButton, () => _controller.Undo());
+            UiFactory.Wire(_hintButton, () => _controller.TryUseHint());
+            UiFactory.Wire(_menuButton, SceneNavigator.LoadMenu);
+            UiFactory.Wire(_easyButton, () => StartNew(Difficulty.Easy));
+            UiFactory.Wire(_mediumButton, () => StartNew(Difficulty.Medium));
+            UiFactory.Wire(_hardButton, () => StartNew(Difficulty.Hard));
         }
 
         private void Update()
@@ -95,51 +116,21 @@ namespace Sudoku.Gameplay
                     : Localization.T("game.mode.note");
         }
 
-        // ---------- UI 构建 ----------
-        private void BuildUi()
+        // ---------- 棋盘网格构建(运行时,Prefab 只留 BoardGrid 空容器) ----------
+
+        private void BuildGrid()
         {
-            var root = (RectTransform)transform;
-            UiFactory.Stretch(root);
-            root.gameObject.AddComponent<Image>().color = Theme.Background; // 铺满背景色
+            var grid = _boardGrid;
 
-            var rootLayout = root.gameObject.AddComponent<VerticalLayoutGroup>();
-            rootLayout.spacing = 12;
-            rootLayout.childAlignment = TextAnchor.UpperCenter;
-            rootLayout.childControlWidth = true;
-            rootLayout.childControlHeight = true;
-            rootLayout.childForceExpandWidth = false; // 棋盘保持自身宽度居中,不横向拉伸
-            rootLayout.childForceExpandHeight = false;
-            rootLayout.padding = new RectOffset(16, 16, 24, 16);
-
-            var title = UiFactory.CreateText("Title", transform, 40, TextAnchor.MiddleCenter, Theme.Text);
-            title.text = Localization.T("menu.title");
-
-            _statusText = UiFactory.CreateText("Status", transform, 22, TextAnchor.MiddleCenter, Theme.TextMuted);
-            _modeText = UiFactory.CreateText("Mode", transform, 20, TextAnchor.MiddleCenter, Theme.TextMuted);
-
-            BuildBoard(transform);
-
-            _resultText = UiFactory.CreateText("Result", transform, 26, TextAnchor.MiddleCenter, Theme.Success);
-            _resultText.text = "";
-
-            BuildNumberPad(transform);
-            BuildToolbar(transform);
-            BuildDifficultyBar(transform);
-
-            _statsText = UiFactory.CreateText("Stats", transform, 18, TextAnchor.MiddleCenter, Theme.TextMuted);
-        }
-
-        private void BuildBoard(Transform parent)
-        {
-            // 一个宫(box)的边长 = 3 格 + 2 条格间细线
-            float boxSize = SudokuBoard.BoxSize * _cellSize + (SudokuBoard.BoxSize - 1) * _cellSpacing;
-
-            // 外层:棋盘容器,深色背景作为「网格线」颜色,3×3 排列 9 个宫
-            var board = UiFactory.CreateRect("Board", parent);
-            board.gameObject.AddComponent<Image>().color = Theme.GridLine;
-            var boardLayout = board.gameObject.AddComponent<GridLayoutGroup>();
+            // 棋盘容器:深色背景作为「网格线」颜色,3×3 排列 9 个宫
+            var boardImage = grid.gameObject.AddComponent<Image>();
+            boardImage.color = Theme.GridLine;
+            var boardLayout = grid.gameObject.AddComponent<GridLayoutGroup>();
             boardLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             boardLayout.constraintCount = SudokuBoard.BoxSize;
+
+            // 一个宫(box)的边长 = 3 格 + 2 条格间细线
+            float boxSize = SudokuBoard.BoxSize * _cellSize + (SudokuBoard.BoxSize - 1) * _cellSpacing;
             boardLayout.cellSize = new Vector2(boxSize, boxSize);
             boardLayout.spacing = new Vector2(_boxSpacing, _boxSpacing); // 宫间粗线
             boardLayout.padding = new RectOffset(_boardBorder, _boardBorder, _boardBorder, _boardBorder); // 外边框
@@ -148,7 +139,7 @@ namespace Sudoku.Gameplay
             _cells = new Cell[SudokuBoard.CellCount];
             for (int box = 0; box < SudokuBoard.BoxSize * SudokuBoard.BoxSize; box++)
             {
-                var boxGo = UiFactory.CreateRect($"Box_{box}", board);
+                var boxGo = UiFactory.CreateRect($"Box_{box}", grid);
                 var boxLayout = boxGo.gameObject.AddComponent<GridLayoutGroup>();
                 boxLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
                 boxLayout.constraintCount = SudokuBoard.BoxSize;
@@ -170,52 +161,27 @@ namespace Sudoku.Gameplay
                     button.transition = Selectable.Transition.None; // 手动配色,避免按钮过渡覆盖高亮
                     button.onClick.AddListener(() => _controller.SelectCell(index));
 
-                    var valueText = UiFactory.CreateText("Value", cellRect, 30, TextAnchor.MiddleCenter, Theme.PlayerText);
-                    UiFactory.Stretch(valueText.rectTransform);
-                    var noteText = UiFactory.CreateText("Note", cellRect, 12, TextAnchor.MiddleCenter, Theme.NoteText);
-                    UiFactory.Stretch(noteText.rectTransform);
+                    var valueText = CreateCellText("Value", cellRect, _semiboldFont, 30, Theme.PlayerText);
+                    var noteText = CreateCellText("Note", cellRect, _regularFont, 12, Theme.NoteText);
 
                     _cells[index] = new Cell { Background = image, ValueText = valueText, NoteText = noteText };
                 }
             }
         }
 
-        private void BuildNumberPad(Transform parent)
+        private static Text CreateCellText(string name, Transform parent, Font font, int size, Color color)
         {
-            var pad = UiFactory.CreateRect("NumberPad", parent);
-            UiFactory.Horizontal(pad, 6f);
-
-            for (int d = 1; d <= 9; d++)
-            {
-                int n = d;
-                AddButton(pad, n.ToString(), () => _controller.InputNumber(n));
-            }
-            AddButton(pad, "⌫", () => _controller.Erase());
-            AddButton(pad, "✎", () => _controller.ToggleInputMode());
-        }
-
-        private void BuildToolbar(Transform parent)
-        {
-            var bar = UiFactory.CreateRect("Toolbar", parent);
-            UiFactory.Horizontal(bar, 8f);
-            AddButton(bar, Localization.T("game.undo"), () => _controller.Undo(), 88f);
-            AddButton(bar, Localization.T("game.hint"), () => _controller.TryUseHint(), 88f);
-            AddButton(bar, Localization.T("game.menu"), () => SceneNavigator.LoadMenu(), 88f);
-        }
-
-        private void BuildDifficultyBar(Transform parent)
-        {
-            var bar = UiFactory.CreateRect("DifficultyBar", parent);
-            UiFactory.Horizontal(bar, 8f);
-            AddButton(bar, Localization.T("difficulty.easy"), () => StartNew(Difficulty.Easy), 120f);
-            AddButton(bar, Localization.T("difficulty.medium"), () => StartNew(Difficulty.Medium), 120f);
-            AddButton(bar, Localization.T("difficulty.hard"), () => StartNew(Difficulty.Hard), 120f);
-        }
-
-        /// <summary>统一创建棋盘里的按钮(默认 64×64,可指定宽度)。</summary>
-        private static Button AddButton(Transform parent, string label, System.Action onClick, float width = 64f)
-        {
-            return UiFactory.CreateButton($"Btn_{label}", parent, label, Theme.Secondary, onClick, width, 64);
+            var rt = UiFactory.CreateRect(name, parent);
+            var text = rt.gameObject.AddComponent<Text>();
+            text.font = font;
+            text.fontSize = size;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = color;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+            text.raycastTarget = false;
+            UiFactory.Stretch(rt);
+            return text;
         }
 
         // ---------- 刷新 ----------

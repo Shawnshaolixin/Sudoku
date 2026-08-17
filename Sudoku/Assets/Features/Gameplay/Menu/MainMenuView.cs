@@ -5,77 +5,65 @@ using UnityEngine.UI;
 
 namespace Sudoku.Gameplay
 {
-    /// <summary>主菜单:选择难度、开始游戏、进入设置。</summary>
+    /// <summary>
+    /// 主菜单:选择难度、开始游戏、进入设置。
+    /// UI 层级由 Prefab 承载(UiPrefabBuilder 生成),这里只绑定逻辑与文案。
+    /// </summary>
     public sealed class MainMenuView : MonoBehaviour
     {
+        [Header("难度选择")]
+        [SerializeField] private Button _diffEasy;
+        [SerializeField] private Button _diffMedium;
+        [SerializeField] private Button _diffHard;
+        [SerializeField] private Button _startButton;
+        [SerializeField] private Button _settingsButton;
+
+        [Header("文案")]
+        [SerializeField] private Text _title;
+        [SerializeField] private Text _subtitle;
+        [SerializeField] private Text _diffLabel;
+        [SerializeField] private Text _statsText;
+
         private readonly List<DiffEntry> _difficultyEntries = new List<DiffEntry>();
         private Difficulty _selected = Difficulty.Easy;
         private SettingsPanelView _settingsPanel;
-        private Text _statsText;
 
         private struct DiffEntry
         {
             public Difficulty Difficulty;
-            public Image Image;
+            public Button Button;
         }
 
         private void Awake()
         {
             _settingsPanel = FindFirstObjectByType<SettingsPanelView>();
-            BuildUi();
+            WireUi();
             RefreshDifficulty();
         }
 
-        private void BuildUi()
+        private void WireUi()
         {
-            var root = (RectTransform)transform;
-            UiFactory.Stretch(root);
-            root.gameObject.AddComponent<Image>().color = Theme.Background; // 铺满背景色
+            _title.text = Localization.T("menu.title");
+            _subtitle.text = Localization.T("menu.subtitle");
+            _diffLabel.text = Localization.T("menu.chooseDifficulty");
 
-            var layout = UiFactory.Vertical(root, 22f, TextAnchor.MiddleCenter);
-            layout.padding = new RectOffset(24, 24, 80, 48);
+            AddDifficultyButton(_diffEasy, Difficulty.Easy);
+            AddDifficultyButton(_diffMedium, Difficulty.Medium);
+            AddDifficultyButton(_diffHard, Difficulty.Hard);
 
-            var title = UiFactory.CreateText("Title", transform, 72, TextAnchor.MiddleCenter, Theme.Text);
-            title.text = Localization.T("menu.title");
-
-            var subtitle = UiFactory.CreateText("Subtitle", transform, 26, TextAnchor.MiddleCenter, Theme.TextMuted);
-            subtitle.text = Localization.T("menu.subtitle");
-
-            var diffLabel = UiFactory.CreateText("DiffLabel", transform, 28, TextAnchor.MiddleCenter, Theme.Text);
-            diffLabel.text = Localization.T("menu.chooseDifficulty");
-
-            BuildDifficultyRow(transform);
-
-            UiFactory.CreateButton("StartBtn", transform, Localization.T("menu.start"), Theme.Primary, () => SceneNavigator.LoadGameplay(_selected), 340, 84);
-            UiFactory.CreateButton("SettingsBtn", transform, Localization.T("menu.settings"), Theme.Secondary, () => _settingsPanel?.Show(), 200, 64);
-
-            _statsText = UiFactory.CreateText("Stats", transform, 22, TextAnchor.MiddleCenter, Theme.TextMuted);
+            UiFactory.Wire(_startButton, () => SceneNavigator.LoadGameplay(_selected));
+            UiFactory.Wire(_settingsButton, () => _settingsPanel?.Show());
         }
 
-        private void BuildDifficultyRow(Transform parent)
+        private void AddDifficultyButton(Button button, Difficulty difficulty)
         {
-            var row = UiFactory.CreateRect("DifficultyRow", parent);
-            UiFactory.Horizontal(row, 14f);
-            AddDifficultyButton(row, "difficulty.easy", Difficulty.Easy);
-            AddDifficultyButton(row, "difficulty.medium", Difficulty.Medium);
-            AddDifficultyButton(row, "difficulty.hard", Difficulty.Hard);
-        }
-
-        private void AddDifficultyButton(Transform parent, string labelKey, Difficulty d)
-        {
-            var image = UiFactory.CreateImage($"Diff_{d}", parent, Theme.Secondary);
-            var le = image.gameObject.AddComponent<LayoutElement>();
-            le.preferredWidth = 150;
-            le.preferredHeight = 64;
-            var button = image.gameObject.AddComponent<Button>();
-            button.targetGraphic = image;
-            button.onClick.AddListener(() => { _selected = d; RefreshDifficulty(); });
-
-            var text = UiFactory.CreateText("Label", image.transform, 26, TextAnchor.MiddleCenter, Theme.Text);
-            UiFactory.Stretch(text.rectTransform);
-            text.text = Localization.T(labelKey);
-
-            _difficultyEntries.Add(new DiffEntry { Difficulty = d, Image = image });
+            button.GetComponentInChildren<Text>().text = DifficultyName(difficulty);
+            UiFactory.Wire(button, () =>
+            {
+                _selected = difficulty;
+                RefreshDifficulty();
+            });
+            _difficultyEntries.Add(new DiffEntry { Difficulty = difficulty, Button = button });
         }
 
         private void RefreshDifficulty()
@@ -83,7 +71,7 @@ namespace Sudoku.Gameplay
             for (int i = 0; i < _difficultyEntries.Count; i++)
             {
                 var e = _difficultyEntries[i];
-                e.Image.color = e.Difficulty == _selected ? Theme.Primary : Theme.Secondary;
+                e.Button.targetGraphic.color = e.Difficulty == _selected ? Theme.Primary : Theme.Secondary;
             }
 
             if (_statsText != null)
@@ -92,6 +80,17 @@ namespace Sudoku.Gameplay
                 _statsText.text = Localization.F("menu.stats", s.TotalGames, s.CompletedGames);
             }
         }
+
+        private static string DifficultyName(Difficulty d) => d switch
+        {
+            Difficulty.Beginner => Localization.T("difficulty.beginner"),
+            Difficulty.Easy => Localization.T("difficulty.easy"),
+            Difficulty.Medium => Localization.T("difficulty.medium"),
+            Difficulty.Hard => Localization.T("difficulty.hard"),
+            Difficulty.Expert => Localization.T("difficulty.expert"),
+            Difficulty.Master => Localization.T("difficulty.master"),
+            _ => d.ToString()
+        };
 
         private void Update()
         {
