@@ -33,6 +33,7 @@ namespace Sudoku.Gameplay
         private readonly Stack<Move> _undoStack = new Stack<Move>();
 
         private int _hintCount = 3;
+        private int _mistakeCount; // 本局累计填错次数(结算弹窗星级评级用)
 
         private float _startTime;
         private bool _finished;
@@ -56,6 +57,7 @@ namespace Sudoku.Gameplay
         public bool IsFinished => _finished;
         public bool IsReady => _board != null;
         public bool ShowMistakes { get => _showMistakes; set => _showMistakes = value; }
+        public int MistakeCount => _mistakeCount;
 
         /// <summary>本局已用时间(秒),完成后冻结。</summary>
         public float ElapsedSeconds => _finished ? _elapsedOnFinish : Time.time - _startTime;
@@ -81,6 +83,7 @@ namespace Sudoku.Gameplay
             _selectedIndex = -1;
             _inputMode = GameInputMode.Number;
             _hintCount = 3;
+            _mistakeCount = 0;
             _finished = false;
             _startTime = Time.time;
             _elapsedOnFinish = 0f;
@@ -118,6 +121,7 @@ namespace Sudoku.Gameplay
                 int newValue = oldValue == number ? 0 : number; // 再点同数字 = 清除
                 _board[_selectedIndex] = newValue;
                 _notes[_selectedIndex] = 0;
+                if (newValue != 0 && newValue != _solution[_selectedIndex]) _mistakeCount++; // 填错累计
                 if (newValue != 0) AutoClearPeerNotes(_selectedIndex, newValue);
                 _undoStack.Push(new Move(_selectedIndex, oldValue, newValue, oldNotes, 0));
                 AudioService.PlaySfx(newValue != 0 ? "place" : "erase");

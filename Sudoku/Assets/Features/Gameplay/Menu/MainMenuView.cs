@@ -24,6 +24,10 @@ namespace Sudoku.Gameplay
         [SerializeField] private Text _diffLabel;
         [SerializeField] private Text _statsText;
 
+        [Header("难度选中态(由 UiPrefabBuilder 绑定 Kenney 按钮图)")]
+        [SerializeField] private Sprite _diffSpriteNormal;   // 未选中(平面)
+        [SerializeField] private Sprite _diffSpriteSelected; // 选中(立体)
+
         private readonly List<DiffEntry> _difficultyEntries = new List<DiffEntry>();
         private Difficulty _selected = Difficulty.Easy;
         private SettingsPanelView _settingsPanel;
@@ -71,7 +75,10 @@ namespace Sudoku.Gameplay
             for (int i = 0; i < _difficultyEntries.Count; i++)
             {
                 var e = _difficultyEntries[i];
-                e.Button.targetGraphic.color = e.Difficulty == _selected ? Theme.Primary : Theme.Secondary;
+                // Kenney 蓝图不宜用颜色着色(会洗淡),选中/未选中通过换 Sprite 区分
+                var image = e.Button.targetGraphic as Image;
+                if (image != null && _diffSpriteSelected != null && _diffSpriteNormal != null)
+                    image.sprite = e.Difficulty == _selected ? _diffSpriteSelected : _diffSpriteNormal;
             }
 
             if (_statsText != null)

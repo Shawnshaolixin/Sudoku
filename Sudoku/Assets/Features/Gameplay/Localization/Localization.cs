@@ -58,6 +58,16 @@ namespace Sudoku.Gameplay
             { "game.win", new Entry("Solved! Time {0}", "完成!用时 {0}") },
             { "game.stats", new Entry("Games {0} · Solved {1} · Best {2}", "总局 {0} · 完成 {1} · 最佳 {2}") },
 
+            // 结算弹窗
+            { "result.title", new Entry("Solved!", "完成!") },
+            { "result.perfect", new Entry("Flawless", "无错误") },
+            { "result.time", new Entry("Time", "用时") },
+            { "result.best", new Entry("Personal Best", "个人最佳") },
+            { "result.hints", new Entry("Hints Used", "提示使用") },
+            { "result.newRecord", new Entry("New record!", "新纪录!") },
+            { "result.next", new Entry("Next", "下一局") },
+            { "result.home", new Entry("Home", "主页") },
+
             // 设置
             { "settings.title", new Entry("Settings", "设置") },
             { "settings.sound", new Entry("Sound", "音效") },

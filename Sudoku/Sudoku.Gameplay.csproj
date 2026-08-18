@@ -73,6 +73,7 @@
     <Compile Include="Assets\Features\Gameplay\Services\FirebaseAnalyticsService.cs" />
     <Compile Include="Assets\Features\Gameplay\Menu\MainMenuView.cs" />
     <Compile Include="Assets\Features\Gameplay\Services\ServiceInterfaces.cs" />
+    <Compile Include="Assets\Features\Gameplay\VictoryCelebration.cs" />
     <Compile Include="Assets\Features\Gameplay\Menu\SceneNavigator.cs" />
     <Compile Include="Assets\Features\Gameplay\GameStatistics.cs" />
     <Compile Include="Assets\Features\Gameplay\SudokuBoardView.cs" />

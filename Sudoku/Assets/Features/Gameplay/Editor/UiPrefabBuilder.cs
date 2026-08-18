@@ -21,8 +21,43 @@ namespace Sudoku.Gameplay.Editor
         private const string GameplayDir = UiRoot + "/Gameplay";
 
         private const string ButtonPrefabPath = CommonDir + "/Button.prefab";
-        private const string TogglePrefabPath = CommonDir + "/ToggleButton.prefab";
         private const string ModalPrefabPath = CommonDir + "/ModalPanel.prefab";
+
+        // Kenney UI Pack 素材(Assets/Resources/Art/UI/,SpriteImportSettings 自动 9-slice 切图)
+        private const string ArtUiDir = "Assets/Resources/Art/UI";
+        private const string SpritePrimaryPath = ArtUiDir + "/button_rectangle_depth_flat.png"; // 主要按钮(立体下边)
+        private const string SpriteFlatPath = ArtUiDir + "/button_rectangle_flat.png";          // 常规按钮(平面)
+        private const string SlideGreyPath = ArtUiDir + "/slide_horizontal_grey.png";           // 开关轨道(关)
+        private const string SlideColorPath = ArtUiDir + "/slide_horizontal_color.png";         // 开关轨道(开)
+        private const string SlideHandlePath = ArtUiDir + "/slide_hangle.png";                  // 开关把手
+        private const string StarFilledPath = ArtUiDir + "/star.png";                           // 实心星
+        private const string StarOutlinePath = ArtUiDir + "/star_outline.png";                  // 空心星
+
+        private static Sprite _primarySprite;
+        private static Sprite _flatSprite;
+        private static Sprite _slideGrey;
+        private static Sprite _slideColor;
+        private static Sprite _slideHandle;
+        private static Sprite _starFilled;
+        private static Sprite _starOutline;
+        private static Sprite PrimarySprite => Cache(ref _primarySprite, SpritePrimaryPath);
+        private static Sprite FlatSprite => Cache(ref _flatSprite, SpriteFlatPath);
+        private static Sprite SlideGrey => Cache(ref _slideGrey, SlideGreyPath);
+        private static Sprite SlideColor => Cache(ref _slideColor, SlideColorPath);
+        private static Sprite SlideHandle => Cache(ref _slideHandle, SlideHandlePath);
+        private static Sprite StarFilled => Cache(ref _starFilled, StarFilledPath);
+        private static Sprite StarOutline => Cache(ref _starOutline, StarOutlinePath);
+
+        private static Sprite Cache(ref Sprite cached, string path) =>
+            cached != null ? cached : (cached = LoadSprite(path));
+
+        private static Sprite LoadSprite(string path)
+        {
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (sprite == null)
+                Debug.LogWarning($"[UiPrefabBuilder] 缺少 Sprite:{path}\n请把 Kenney UI Pack 的 PNG 放到 {ArtUiDir} 下(SpriteImportSettings 会自动切图)。");
+            return sprite;
+        }
 
         public const string MainMenuPrefabPath = MenuDir + "/MainMenuView.prefab";
         public const string SettingsPrefabPath = MenuDir + "/SettingsPanelView.prefab";
@@ -52,18 +87,18 @@ namespace Sudoku.Gameplay.Editor
 
             var semibold = FontSetup.LoadSemibold();
             var regular = FontSetup.LoadRegular();
+            AssetDatabase.Refresh(); // 确保 Kenney PNG 已导入(SpriteImportSettings 切图后才有 Sprite)
 
             EnsureFolder(CommonDir);
             EnsureFolder(MenuDir);
             EnsureFolder(GameplayDir);
 
             var button = BuildButtonPrefab(semibold);
-            var toggle = BuildTogglePrefab(button, regular);
             var modal = BuildModalPrefab();
 
             BuildMainMenu(button, semibold, regular);
-            BuildSettings(button, toggle, modal, semibold, regular);
-            BuildGameplay(button, semibold, regular);
+            BuildSettings(button, modal, semibold, regular);
+            BuildGameplay(button, modal, semibold, regular);
             BuildOnboarding(button, modal, semibold, regular);
 
             AssetDatabase.SaveAssets();
@@ -82,6 +117,8 @@ namespace Sudoku.Gameplay.Editor
         {
             var root = CreateRect("Button", null);
             var image = root.gameObject.AddComponent<Image>();
+            image.sprite = PrimarySprite; // 默认主按钮外观,实例按需覆盖
+            image.type = Image.Type.Sliced;
             image.color = Color.white;
 
             var button = root.gameObject.AddComponent<Button>();
@@ -101,23 +138,6 @@ namespace Sudoku.Gameplay.Editor
             Stretch(label.rectTransform);
 
             var asset = PrefabUtility.SaveAsPrefabAsset(root.gameObject, ButtonPrefabPath);
-            UnityEngine.Object.DestroyImmediate(root.gameObject);
-            return asset;
-        }
-
-        /// <summary>开关按钮 = 通用按钮变体(宽 400×60,正文字号),供设置面板使用。</summary>
-        private static GameObject BuildTogglePrefab(GameObject buttonPrefab, Font regular)
-        {
-            var root = InstantiateUnder(buttonPrefab, null);
-            root.name = "ToggleButton";
-            var le = root.GetComponent<LayoutElement>();
-            le.preferredWidth = 400;
-            le.preferredHeight = 60;
-            var label = root.GetComponentInChildren<Text>();
-            label.font = regular;
-            label.fontSize = 24;
-
-            var asset = PrefabUtility.SaveAsPrefabAsset(root.gameObject, TogglePrefabPath);
             UnityEngine.Object.DestroyImmediate(root.gameObject);
             return asset;
         }
@@ -161,12 +181,12 @@ namespace Sudoku.Gameplay.Editor
 
             var row = CreateRect("DifficultyRow", root);
             AddHBox(row, 14f);
-            var diffEasy = AddButton(button, row, "Diff_Easy", Localization.T("difficulty.easy"), Theme.Secondary, 150, 64, semibold, 26);
-            var diffMedium = AddButton(button, row, "Diff_Medium", Localization.T("difficulty.medium"), Theme.Secondary, 150, 64, semibold, 26);
-            var diffHard = AddButton(button, row, "Diff_Hard", Localization.T("difficulty.hard"), Theme.Secondary, 150, 64, semibold, 26);
+            var diffEasy = AddButton(button, row, "Diff_Easy", Localization.T("difficulty.easy"), FlatSprite, 150, 64, semibold, 26);
+            var diffMedium = AddButton(button, row, "Diff_Medium", Localization.T("difficulty.medium"), FlatSprite, 150, 64, semibold, 26);
+            var diffHard = AddButton(button, row, "Diff_Hard", Localization.T("difficulty.hard"), FlatSprite, 150, 64, semibold, 26);
 
-            var startButton = AddButton(button, root, "StartButton", Localization.T("menu.start"), Theme.Primary, 340, 84, semibold, 30);
-            var settingsButton = AddButton(button, root, "SettingsButton", Localization.T("menu.settings"), Theme.Secondary, 200, 64, semibold, 26);
+            var startButton = AddButton(button, root, "StartButton", Localization.T("menu.start"), PrimarySprite, 340, 84, semibold, 30);
+            var settingsButton = AddButton(button, root, "SettingsButton", Localization.T("menu.settings"), FlatSprite, 200, 64, semibold, 26);
             var stats = CreateText("Stats", root, regular, 22, Theme.TextMuted);
 
             AssignView(view, so =>
@@ -178,6 +198,8 @@ namespace Sudoku.Gameplay.Editor
                 SetRef(so, "_diffEasy", diffEasy);
                 SetRef(so, "_diffMedium", diffMedium);
                 SetRef(so, "_diffHard", diffHard);
+                SetRef(so, "_diffSpriteNormal", FlatSprite);
+                SetRef(so, "_diffSpriteSelected", PrimarySprite);
                 SetRef(so, "_startButton", startButton);
                 SetRef(so, "_settingsButton", settingsButton);
             });
@@ -186,7 +208,7 @@ namespace Sudoku.Gameplay.Editor
             UnityEngine.Object.DestroyImmediate(root.gameObject);
         }
 
-        private static void BuildSettings(GameObject button, GameObject toggle, GameObject modal, Font semibold, Font regular)
+        private static void BuildSettings(GameObject button, GameObject modal, Font semibold, Font regular)
         {
             var root = CreateRect("SettingsPanelView", null);
             var view = root.gameObject.AddComponent<SettingsPanelView>();
@@ -202,19 +224,20 @@ namespace Sudoku.Gameplay.Editor
             var title = CreateText("Title", panel, semibold, 36, Theme.Text);
             title.text = Localization.T("settings.title");
 
-            var sound = AddButton(toggle, panel, "Toggle_Sound", ToggleLabel("settings.sound"), Theme.Secondary, 400, 60, regular, 24);
-            var vibration = AddButton(toggle, panel, "Toggle_Vibration", ToggleLabel("settings.vibration"), Theme.Secondary, 400, 60, regular, 24);
-            var music = AddButton(toggle, panel, "Toggle_Music", ToggleLabel("settings.music"), Theme.Secondary, 400, 60, regular, 24);
-            var mistakes = AddButton(toggle, panel, "Toggle_Mistakes", ToggleLabel("settings.mistakes"), Theme.Secondary, 400, 60, regular, 24);
+            // 四项开关:左侧名称 + 右侧真 Switch(轨道 + 把手)
+            var (sound, soundLabel) = AddSwitchRow(button, panel, "Toggle_Sound", Localization.T("settings.sound"), regular, 24);
+            var (vibration, vibrationLabel) = AddSwitchRow(button, panel, "Toggle_Vibration", Localization.T("settings.vibration"), regular, 24);
+            var (music, musicLabel) = AddSwitchRow(button, panel, "Toggle_Music", Localization.T("settings.music"), regular, 24);
+            var (mistakes, mistakesLabel) = AddSwitchRow(button, panel, "Toggle_Mistakes", Localization.T("settings.mistakes"), regular, 24);
 
-            var clearStats = AddButton(button, panel, "ClearStatsButton", Localization.T("settings.clearStats"), Theme.Secondary, 400, 60, regular, 24);
-            var deleteData = AddButton(button, panel, "DeleteDataButton", Localization.T("settings.deleteData"), Theme.Secondary, 400, 60, regular, 24);
-            var buyRemoveAds = AddButton(button, panel, "BuyRemoveAdsButton", Localization.T("settings.buyRemoveAds"), Theme.Secondary, 400, 60, regular, 24);
-            var restore = AddButton(button, panel, "RestorePurchaseButton", Localization.T("settings.restore"), Theme.Secondary, 400, 60, regular, 24);
-            var privacy = AddButton(button, panel, "PrivacyButton", Localization.T("settings.privacy"), Theme.Secondary, 400, 60, regular, 24);
+            var clearStats = AddButton(button, panel, "ClearStatsButton", Localization.T("settings.clearStats"), FlatSprite, 400, 60, regular, 24);
+            var deleteData = AddButton(button, panel, "DeleteDataButton", Localization.T("settings.deleteData"), FlatSprite, 400, 60, regular, 24);
+            var buyRemoveAds = AddButton(button, panel, "BuyRemoveAdsButton", Localization.T("settings.buyRemoveAds"), FlatSprite, 400, 60, regular, 24);
+            var restore = AddButton(button, panel, "RestorePurchaseButton", Localization.T("settings.restore"), FlatSprite, 400, 60, regular, 24);
+            var privacy = AddButton(button, panel, "PrivacyButton", Localization.T("settings.privacy"), FlatSprite, 400, 60, regular, 24);
 
             var feedback = CreateText("Feedback", panel, regular, 20, Theme.Feedback);
-            var close = AddButton(button, panel, "CloseButton", Localization.T("settings.close"), Theme.Primary, 400, 64, semibold, 26);
+            var close = AddButton(button, panel, "CloseButton", Localization.T("settings.close"), PrimarySprite, 400, 64, semibold, 26);
 
             overlay.gameObject.SetActive(false);
 
@@ -223,10 +246,12 @@ namespace Sudoku.Gameplay.Editor
                 SetRef(so, "_overlay", overlay.gameObject);
                 SetRef(so, "_title", title);
                 SetRef(so, "_feedbackText", feedback);
-                SetToggle(so, "_soundToggle", sound);
-                SetToggle(so, "_vibrationToggle", vibration);
-                SetToggle(so, "_musicToggle", music);
-                SetToggle(so, "_mistakesToggle", mistakes);
+                SetSwitch(so, "_soundToggle", sound, soundLabel);
+                SetSwitch(so, "_vibrationToggle", vibration, vibrationLabel);
+                SetSwitch(so, "_musicToggle", music, musicLabel);
+                SetSwitch(so, "_mistakesToggle", mistakes, mistakesLabel);
+                SetRef(so, "_trackOnSprite", SlideColor);
+                SetRef(so, "_trackOffSprite", SlideGrey);
                 SetRef(so, "_clearStatsButton", clearStats);
                 SetRef(so, "_deleteDataButton", deleteData);
                 SetRef(so, "_buyRemoveAdsButton", buyRemoveAds);
@@ -239,7 +264,7 @@ namespace Sudoku.Gameplay.Editor
             UnityEngine.Object.DestroyImmediate(root.gameObject);
         }
 
-        private static void BuildGameplay(GameObject button, Font semibold, Font regular)
+        private static void BuildGameplay(GameObject button, GameObject modal, Font semibold, Font regular)
         {
             var root = CreateRect("SudokuBoardView", null);
             Stretch(root);
@@ -254,32 +279,83 @@ namespace Sudoku.Gameplay.Editor
 
             var boardGrid = CreateRect("BoardGrid", root); // 棋盘 81 格由运行时填充
 
-            var result = CreateText("Result", root, semibold, 26, Theme.Success);
-
             var pad = CreateRect("NumberPad", root);
             AddHBox(pad, 6f);
             var numberButtons = new Button[9];
             for (int d = 0; d < 9; d++)
             {
-                numberButtons[d] = AddButton(button, pad, $"Btn_{d + 1}", (d + 1).ToString(), Theme.Secondary, 64, 64, semibold, 30);
+                numberButtons[d] = AddButton(button, pad, $"Btn_{d + 1}", (d + 1).ToString(), FlatSprite, 64, 64, semibold, 30);
             }
             // 图标字符由运行时动态渲染,无需预烘焙
-            var eraseButton = AddButton(button, pad, "Btn_Erase", "←", Theme.Secondary, 64, 64, semibold, 30);
-            var modeButton = AddButton(button, pad, "Btn_Mode", "＋", Theme.Secondary, 64, 64, semibold, 30);
+            var eraseButton = AddButton(button, pad, "Btn_Erase", "←", FlatSprite, 64, 64, semibold, 30);
+            var modeButton = AddButton(button, pad, "Btn_Mode", "＋", FlatSprite, 64, 64, semibold, 30);
 
             var bar = CreateRect("Toolbar", root);
             AddHBox(bar, 8f);
-            var undoButton = AddButton(button, bar, "UndoButton", Localization.T("game.undo"), Theme.Secondary, 88, 64, semibold, 26);
-            var hintButton = AddButton(button, bar, "HintButton", Localization.T("game.hint"), Theme.Secondary, 88, 64, semibold, 26);
-            var menuButton = AddButton(button, bar, "MenuButton", Localization.T("game.menu"), Theme.Secondary, 88, 64, semibold, 26);
+            var undoButton = AddButton(button, bar, "UndoButton", Localization.T("game.undo"), FlatSprite, 88, 64, semibold, 26);
+            var hintButton = AddButton(button, bar, "HintButton", Localization.T("game.hint"), FlatSprite, 88, 64, semibold, 26);
+            var menuButton = AddButton(button, bar, "MenuButton", Localization.T("game.menu"), FlatSprite, 88, 64, semibold, 26);
 
             var diffBar = CreateRect("DifficultyBar", root);
             AddHBox(diffBar, 8f);
-            var easyButton = AddButton(button, diffBar, "EasyButton", Localization.T("difficulty.easy"), Theme.Secondary, 120, 64, semibold, 26);
-            var mediumButton = AddButton(button, diffBar, "MediumButton", Localization.T("difficulty.medium"), Theme.Secondary, 120, 64, semibold, 26);
-            var hardButton = AddButton(button, diffBar, "HardButton", Localization.T("difficulty.hard"), Theme.Secondary, 120, 64, semibold, 26);
+            var easyButton = AddButton(button, diffBar, "EasyButton", Localization.T("difficulty.easy"), FlatSprite, 120, 64, semibold, 26);
+            var mediumButton = AddButton(button, diffBar, "MediumButton", Localization.T("difficulty.medium"), FlatSprite, 120, 64, semibold, 26);
+            var hardButton = AddButton(button, diffBar, "HardButton", Localization.T("difficulty.hard"), FlatSprite, 120, 64, semibold, 26);
 
             var stats = CreateText("Stats", root, regular, 18, Theme.TextMuted);
+
+            // 胜利结算弹窗(默认隐藏,由 SudokuBoardView 在胜利时填充并显示;放最后保证盖住键盘/工具栏)
+            var overlay = InstantiateUnder(modal, root);
+            overlay.name = "ResultOverlay";
+            var panel = (RectTransform)overlay.Find("Panel");
+            panel.sizeDelta = new Vector2(620, 560);
+            var vbox = panel.GetComponent<VerticalLayoutGroup>();
+            vbox.spacing = 10f;
+            vbox.padding = new RectOffset(32, 32, 28, 28);
+
+            var stars = CreateRect("Stars", panel);
+            AddFixedHBox(stars, 16f);
+            var starImages = new Image[3];
+            for (int s = 0; s < 3; s++)
+            {
+                var starRect = CreateRect($"Star_{s + 1}", stars);
+                var starImage = starRect.gameObject.AddComponent<Image>();
+                starImage.sprite = StarFilled;
+                starImage.type = Image.Type.Simple;
+                starRect.sizeDelta = new Vector2(52, 52);
+                starImages[s] = starImage;
+            }
+
+            var resultTitle = CreateText("ResultTitle", panel, semibold, 44, Theme.Text);
+            resultTitle.text = Localization.T("result.title");
+            var subtitle = CreateText("ResultSubtitle", panel, regular, 22, Theme.TextMuted);
+
+            var divider = CreateRect("Divider", panel);
+            divider.gameObject.AddComponent<Image>().color = new Color(0.4f, 0.4f, 0.5f, 0.25f);
+            var dividerLe = divider.gameObject.AddComponent<LayoutElement>();
+            dividerLe.preferredHeight = 2;
+
+            var timeRow = AddStatRow(panel, "Stat_Time", Localization.T("result.time"), regular, semibold);
+            var bestRow = AddStatRow(panel, "Stat_Best", Localization.T("result.best"), regular, semibold);
+            var hintsRow = AddStatRow(panel, "Stat_Hints", Localization.T("result.hints"), regular, semibold);
+
+            var resultButtons = CreateRect("ResultButtons", panel);
+            AddHBox(resultButtons, 12f);
+            var resultNext = AddButton(button, resultButtons, "ResultNext", Localization.T("result.next"), PrimarySprite, 180, 64, semibold, 26);
+            var resultHome = AddButton(button, resultButtons, "ResultHome", Localization.T("result.home"), FlatSprite, 180, 64, semibold, 26);
+
+            overlay.gameObject.SetActive(false);
+
+            // 调试:右上角小按钮,直接触发胜利撒花(正式发布前删掉此段)
+            var testBtn = AddButton(button, root, "TestConfettiButton", "Test", FlatSprite, 72, 72, semibold, 18);
+            testBtn.transform.SetAsLastSibling();
+            var testLe = testBtn.GetComponent<LayoutElement>();
+            testLe.ignoreLayout = true; // 不参与 VBox 排版,自由定位到右上角
+            var testRt = (RectTransform)testBtn.transform;
+            testRt.anchorMin = new Vector2(1f, 1f);
+            testRt.anchorMax = new Vector2(1f, 1f);
+            testRt.anchoredPosition = new Vector2(-16f, -16f);
+            testRt.sizeDelta = new Vector2(72, 72);
 
             AssignView(view, so =>
             {
@@ -287,8 +363,20 @@ namespace Sudoku.Gameplay.Editor
                 SetRef(so, "_title", title);
                 SetRef(so, "_statusText", status);
                 SetRef(so, "_modeText", mode);
-                SetRef(so, "_resultText", result);
                 SetRef(so, "_statsText", stats);
+                SetRef(so, "_resultOverlay", overlay.gameObject);
+                SetRef(so, "_resultSubtitle", subtitle);
+                SetRef(so, "_resultTime", timeRow.Value);
+                SetRef(so, "_resultBest", bestRow.Value);
+                SetRef(so, "_resultHints", hintsRow.Value);
+                SetRef(so, "_starFilled", StarFilled);
+                SetRef(so, "_starOutline", StarOutline);
+                SetRef(so, "_resultNextButton", resultNext);
+                SetRef(so, "_resultHomeButton", resultHome);
+                SetRef(so, "_confettiTestButton", testBtn);
+                var starArr = so.FindProperty("_starImages");
+                starArr.arraySize = 3;
+                for (int i = 0; i < 3; i++) starArr.GetArrayElementAtIndex(i).objectReferenceValue = starImages[i];
                 SetRef(so, "_eraseButton", eraseButton);
                 SetRef(so, "_modeButton", modeButton);
                 SetRef(so, "_undoButton", undoButton);
@@ -331,8 +419,8 @@ namespace Sudoku.Gameplay.Editor
 
             var row = CreateRect("Buttons", panel);
             AddHBox(row, 16f);
-            var skipButton = AddButton(button, row, "SkipButton", Localization.T("onboarding.skip"), Theme.Secondary, 160, 64, semibold, 26);
-            var nextButton = AddButton(button, row, "NextButton", Localization.T("onboarding.next"), Theme.Primary, 200, 64, semibold, 26);
+            var skipButton = AddButton(button, row, "SkipButton", Localization.T("onboarding.skip"), FlatSprite, 160, 64, semibold, 26);
+            var nextButton = AddButton(button, row, "NextButton", Localization.T("onboarding.next"), PrimarySprite, 200, 64, semibold, 26);
             var nextLabel = nextButton.GetComponentInChildren<Text>();
 
             AssignView(view, so =>
@@ -362,8 +450,72 @@ namespace Sudoku.Gameplay.Editor
             AssetDatabase.CreateFolder(parent, name);
         }
 
-        private static string ToggleLabel(string key) =>
-            $"{Localization.T(key)}: {Localization.T("common.on")}";
+        /// <summary>设置面板一行开关:左侧名称 + 右侧真 Switch(轨道图 + 把手),返回开关 Button 与名称 Text。</summary>
+        private static (Button Button, Text Label) AddSwitchRow(GameObject buttonPrefab, Transform parent, string name,
+            string label, Font font, int fontSize)
+        {
+            var row = CreateRect(name, parent);
+            AddFixedHBox(row, 12f);
+
+            var labelText = CreateText("Label", row, font, fontSize, Theme.Text, TextAnchor.MiddleLeft);
+            var labelLe = labelText.gameObject.AddComponent<LayoutElement>();
+            labelLe.preferredWidth = 280;
+            labelLe.preferredHeight = 32;
+            labelText.text = label;
+
+            var sw = (GameObject)PrefabUtility.InstantiatePrefab(buttonPrefab, row);
+            sw.name = "Switch";
+            // 去掉按钮自带的文字子节点,开关不需要标签
+            var swLabel = sw.transform.Find("Label");
+            if (swLabel != null) UnityEngine.Object.DestroyImmediate(swLabel.gameObject);
+            var swImage = sw.GetComponent<Image>();
+            swImage.sprite = SlideGrey;
+            swImage.type = Image.Type.Sliced;
+            var swLe = sw.GetComponent<LayoutElement>();
+            swLe.preferredWidth = 64;
+            swLe.preferredHeight = 32;
+
+            var knob = CreateRect("Knob", sw.transform);
+            var knobImage = knob.gameObject.AddComponent<Image>();
+            knobImage.sprite = SlideHandle;
+            knobImage.type = Image.Type.Simple;
+            knob.anchorMin = new Vector2(0f, 0.5f);
+            knob.anchorMax = new Vector2(0f, 0.5f);
+            knob.anchoredPosition = new Vector2(2f, 0f);
+            knob.sizeDelta = new Vector2(28, 28);
+
+            return (sw.GetComponent<Button>(), labelText);
+        }
+
+        /// <summary>结算弹窗一行统计:左侧标签 + 右侧数值(固定宽度,不随内容伸缩)。</summary>
+        private static (Text Label, Text Value) AddStatRow(Transform parent, string name, string label, Font labelFont, Font valueFont)
+        {
+            var row = CreateRect(name, parent);
+            var layout = AddFixedHBox(row, 8f);
+            layout.childAlignment = TextAnchor.MiddleLeft;
+            var rowLe = row.gameObject.AddComponent<LayoutElement>();
+            rowLe.preferredHeight = 34;
+
+            var labelText = CreateText("Label", row, labelFont, 22, Theme.TextMuted, TextAnchor.MiddleLeft);
+            var labelLe = labelText.gameObject.AddComponent<LayoutElement>();
+            labelLe.preferredWidth = 260;
+            labelText.text = label;
+
+            var valueText = CreateText("Value", row, valueFont, 22, Theme.Text, TextAnchor.MiddleRight);
+            var valueLe = valueText.gameObject.AddComponent<LayoutElement>();
+            valueLe.preferredWidth = 180;
+
+            return (labelText, valueText);
+        }
+
+        /// <summary>固定宽度横向布局:子元素按 LayoutElement 的 preferred 尺寸摆放,不拉伸占满。</summary>
+        private static HorizontalLayoutGroup AddFixedHBox(RectTransform rt, float spacing)
+        {
+            var layout = AddHBox(rt, spacing);
+            layout.childControlWidth = false;
+            layout.childForceExpandWidth = false;
+            return layout;
+        }
 
         private static RectTransform CreateRect(string name, Transform parent)
         {
@@ -428,13 +580,16 @@ namespace Sudoku.Gameplay.Editor
             return (RectTransform)go.transform;
         }
 
-        /// <summary>实例化通用按钮并覆盖:名称、标签文案、背景色、尺寸、字体。</summary>
-        private static Button AddButton(GameObject prefab, Transform parent, string name, string label, Color bg,
+        /// <summary>实例化通用按钮并覆盖:名称、标签文案、背景 Sprite、尺寸、字体。Sprite 默认用常规(平面)外观。</summary>
+        private static Button AddButton(GameObject prefab, Transform parent, string name, string label, Sprite sprite,
             float width, float height, Font font, int fontSize)
         {
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
             go.name = name;
-            go.GetComponent<Image>().color = bg;
+            var image = go.GetComponent<Image>();
+            image.sprite = sprite != null ? sprite : FlatSprite;
+            image.type = Image.Type.Sliced;
+            image.color = Color.white;
             var le = go.GetComponent<LayoutElement>();
             le.preferredWidth = width;
             le.preferredHeight = height;
@@ -457,11 +612,13 @@ namespace Sudoku.Gameplay.Editor
             so.FindProperty(field).objectReferenceValue = value;
         }
 
-        private static void SetToggle(SerializedObject so, string field, Button button)
+        private static void SetSwitch(SerializedObject so, string field, Button button, Text label)
         {
             var p = so.FindProperty(field);
             p.FindPropertyRelative("Button").objectReferenceValue = button;
-            p.FindPropertyRelative("Label").objectReferenceValue = button.GetComponentInChildren<Text>();
+            p.FindPropertyRelative("Label").objectReferenceValue = label;
+            p.FindPropertyRelative("Track").objectReferenceValue = button.GetComponent<Image>();
+            p.FindPropertyRelative("Knob").objectReferenceValue = button.transform.Find("Knob");
         }
     }
 }

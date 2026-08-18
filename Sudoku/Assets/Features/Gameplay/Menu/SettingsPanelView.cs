@@ -24,6 +24,8 @@ namespace Sudoku.Gameplay
         [SerializeField] private ToggleEntry _vibrationToggle;
         [SerializeField] private ToggleEntry _musicToggle;
         [SerializeField] private ToggleEntry _mistakesToggle;
+        [SerializeField] private Sprite _trackOnSprite;  // 开:彩色轨道
+        [SerializeField] private Sprite _trackOffSprite; // 关:灰色轨道
 
         [Header("动作按钮")]
         [SerializeField] private Button _clearStatsButton;
@@ -36,8 +38,10 @@ namespace Sudoku.Gameplay
         [Serializable]
         private struct ToggleEntry
         {
-            public Button Button;
-            public Text Label;
+            public Button Button;      // 开关整体(点击切换)
+            public Text Label;         // 左侧名称
+            public Image Track;        // 轨道(灰=关,彩色=开)
+            public RectTransform Knob; // 把手(靠左=关,靠右=开)
         }
 
         private void Awake()
@@ -81,13 +85,22 @@ namespace Sudoku.Gameplay
             if (_overlay != null) _overlay.SetActive(false);
         }
 
-        /// <summary>一个「开关」按钮:label 显示当前状态,点击切换。</summary>
+        /// <summary>一个「真 Switch」:名称固定,状态由轨道换图 + 把手滑动呈现,点击切换。</summary>
         private void WireToggle(ToggleEntry entry, string label, Func<bool> get, Action<bool> set)
         {
+            if (entry.Label != null) entry.Label.text = label;
+
             Action refresh = () =>
             {
-                if (entry.Label != null)
-                    entry.Label.text = $"{label}: {(get() ? Localization.T("common.on") : Localization.T("common.off"))}";
+                bool on = get();
+                if (entry.Track != null && _trackOnSprite != null && _trackOffSprite != null)
+                    entry.Track.sprite = on ? _trackOnSprite : _trackOffSprite;
+                if (entry.Knob != null)
+                {
+                    entry.Knob.anchorMin = new Vector2(on ? 1f : 0f, 0.5f);
+                    entry.Knob.anchorMax = new Vector2(on ? 1f : 0f, 0.5f);
+                    entry.Knob.anchoredPosition = new Vector2(on ? -2f : 2f, 0f);
+                }
             };
             UiFactory.Wire(entry.Button, () =>
             {

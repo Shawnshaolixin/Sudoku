@@ -24,7 +24,19 @@ namespace Sudoku.Gameplay
         [SerializeField] private Text _statusText;
         [SerializeField] private Text _modeText;
         [SerializeField] private Text _statsText;
-        [SerializeField] private Text _resultText;
+
+        [Header("胜利结算弹窗")]
+        [SerializeField] private GameObject _resultOverlay;
+        [SerializeField] private Image[] _starImages;   // 3 颗星,按评级实心/空心
+        [SerializeField] private Sprite _starFilled;
+        [SerializeField] private Sprite _starOutline;
+        [SerializeField] private Text _resultSubtitle;
+        [SerializeField] private Text _resultTime;
+        [SerializeField] private Text _resultBest;
+        [SerializeField] private Text _resultHints;
+        [SerializeField] private Button _resultNextButton;
+        [SerializeField] private Button _resultHomeButton;
+        [SerializeField] private Button _confettiTestButton; // 调试:手动触发胜利撒花(发布前可从 Prefab 移除)
         [SerializeField] private Button[] _numberButtons;   // 数字键盘 1~9
         [SerializeField] private Button _eraseButton;
         [SerializeField] private Button _modeButton;
@@ -95,6 +107,12 @@ namespace Sudoku.Gameplay
             UiFactory.Wire(_easyButton, () => StartNew(Difficulty.Easy));
             UiFactory.Wire(_mediumButton, () => StartNew(Difficulty.Medium));
             UiFactory.Wire(_hardButton, () => StartNew(Difficulty.Hard));
+            if (_resultNextButton != null)
+                UiFactory.Wire(_resultNextButton, () => StartNew(_controller.Difficulty)); // 下一局:同难度
+            if (_resultHomeButton != null)
+                UiFactory.Wire(_resultHomeButton, SceneNavigator.LoadMenu);
+            if (_confettiTestButton != null)
+                UiFactory.Wire(_confettiTestButton, VictoryCelebration.Play); // 调试:直接触发撒花
         }
 
         private void Update()
@@ -227,13 +245,46 @@ namespace Sudoku.Gameplay
 
         private void OnGameFinished(bool won)
         {
-            if (_resultText == null) return;
-            _resultText.text = won ? Localization.F("game.win", FormatTime(_controller.ElapsedSeconds)) : "";
+            if (!won) return;
+
+            VictoryCelebration.Play(); // 胜利撒花(贴图缺失时静默跳过)
+
+            if (_resultOverlay == null) return;
+
+            // 星级:无错误 3 星,≤2 次错误 2 星,否则 1 星
+            int mistakes = _controller.MistakeCount;
+            int stars = mistakes == 0 ? 3 : mistakes <= 2 ? 2 : 1;
+            for (int i = 0; i < _starImages.Length; i++)
+                _starImages[i].sprite = i < stars ? _starFilled : _starOutline;
+
+            var diff = _controller.Difficulty;
+            string perfect = mistakes == 0 ? " · " + Localization.T("result.perfect") : "";
+            _resultSubtitle.text = DifficultyName(diff) + perfect;
+
+            _resultTime.text = FormatTime(_controller.ElapsedSeconds);
+
+            int best = _controller.Statistics.BestSecondsFor(diff);
+            if (best == int.MaxValue)
+            {
+                _resultBest.text = "--:--";
+                _resultBest.color = Theme.Text;
+            }
+            else
+            {
+                bool newRecord = _controller.ElapsedSeconds < best;
+                _resultBest.text = (newRecord ? Localization.T("result.newRecord") + "  " : "") + FormatTime(best);
+                _resultBest.color = newRecord ? Theme.Success : Theme.Text;
+            }
+
+            _resultHints.text = Mathf.Max(0, 3 - _controller.HintCount).ToString();
+
+            _resultOverlay.transform.SetAsLastSibling(); // 保险:确保盖住键盘/工具栏等所有界面
+            _resultOverlay.SetActive(true);
         }
 
         private void StartNew(Difficulty difficulty)
         {
-            if (_resultText != null) _resultText.text = "";
+            if (_resultOverlay != null) _resultOverlay.SetActive(false);
             _controller.NewGame(difficulty);
         }
 
