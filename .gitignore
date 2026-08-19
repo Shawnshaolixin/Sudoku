@@ -18,3 +18,9 @@ _verify/bin/
 # Firebase C++ SDK 大体积二进制(可重新导入 SDK 获得,避免超出 GitHub 100MB 限制)
 Sudoku/Assets/Firebase/Plugins/x86_64/FirebaseCppApp-13_15_0.bundle
 Sudoku/Assets/Firebase/Plugins/x86_64/FirebaseCppApp-13_15_0.so
+docs/10_逆向分析_参考APK_Cocos盒子.md
+docs/07_Unity2022落地版最小开发路线图.md
+
+# 本地私有资料(不入库)
+_private/
+docs/11_Unity游戏盒子架构方案.md
