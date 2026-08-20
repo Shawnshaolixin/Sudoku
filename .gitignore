@@ -18,9 +18,11 @@ _verify/bin/
 # Firebase C++ SDK 大体积二进制(可重新导入 SDK 获得,避免超出 GitHub 100MB 限制)
 Sudoku/Assets/Firebase/Plugins/x86_64/FirebaseCppApp-13_15_0.bundle
 Sudoku/Assets/Firebase/Plugins/x86_64/FirebaseCppApp-13_15_0.so
-docs/10_逆向分析_参考APK_Cocos盒子.md
-docs/07_Unity2022落地版最小开发路线图.md
 
-# 本地私有资料(不入库)
+# 本地私有资料(不入库):原始调研材料、历史版本备份一律只放 _private/
 _private/
-docs/11_Unity游戏盒子架构方案.md
+
+# 安全网:调研原文即使被误放回 docs/ 也不入库(正式副本在 _private/)
+docs/10_逆向分析_参考APK_Cocos盒子.md
+
+# 说明:docs/07 与 docs/11 已完成脱敏,自 11 号方案 v2.0 起正常入库(见 11 号 §16 / D-10)
